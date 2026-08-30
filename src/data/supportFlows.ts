@@ -615,15 +615,31 @@ export const SUPPORT_FLOWS: Record<string, Flow> = {
   },
 
   // ── Contact Support ──
+  // ── Contact Support ──
   "contact": {
     id: "contact",
     steps: [
       {
-        message:
-          "I've provided the available automated help above.\n\nIf you still need assistance, you can contact the GharPe support team directly:",
+        message: "How can we help you?",
         options: [
+          { label: "🚨 Immediate Help", action: { type: "flow", id: "immediate-help" } },
           { label: "📧 Email Support", action: { type: "navigate", path: "mailto:gharpe.help@gmail.com" } },
-          { label: "🏠 Main Menu", action: { type: "mainMenu" } },
+          BACK,
+        ],
+      },
+    ],
+  },
+
+  // ── Immediate Help ──
+  "immediate-help": {
+    id: "immediate-help",
+    steps: [
+      {
+        message:
+        "\u{1F6A8} Need immediate assistance?\n\nYou can contact GharPe Support directly.\n\n\u{1F4DE} 8017273136\n\nOur support team can assist you with your issue.",
+        options: [
+          { label: "\u{1F4DE} Call 8017273136", action: { type: "navigate", path: "tel:8017273136" } },
+          BACK,
         ],
       },
     ],
