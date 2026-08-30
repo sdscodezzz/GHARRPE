@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
 
 // Force this route to be dynamic — never statically generated at build time
 export const dynamic = "force-dynamic";
-
-// ─── Resend client (lazy init — avoids build-time crash when env var is missing) ───
-function getResend() {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) throw new Error("RESEND_API_KEY not configured");
-  return new Resend(apiKey);
-}
 
 // ─── Config ─────────────────────────────────────────────────────────────────
 const SUPPORT_EMAIL = "gharpe.help@gmail.com";
@@ -64,6 +56,40 @@ async function verifySignature(
   } catch {
     return false;
   }
+}
+
+// ─── Send email via Resend REST API (no SDK needed — pure Edge-compatible) ──
+async function sendEmail(opts: {
+  from: string;
+  to: string[];
+  subject: string;
+  html: string;
+  replyTo: string;
+}): Promise<{ error?: string }> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error("RESEND_API_KEY not configured");
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: opts.from,
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
+      reply_to: opts.replyTo,
+    }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    return { error: data.message || `Resend API error: ${res.status}` };
+  }
+
+  return {};
 }
 
 // ─── POST handler ───────────────────────────────────────────────────────────
@@ -134,7 +160,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 6. Send email via Resend
+    // 6. Send email via Resend REST API
     const now = new Date().toLocaleString("en-IN", {
       timeZone: "Asia/Kolkata",
       dateStyle: "full",
@@ -160,8 +186,7 @@ export async function POST(req: NextRequest) {
       </div>
     `;
 
-    const resend = getResend();
-    const { error } = await resend.emails.send({
+    const emailError = await sendEmail({
       from: `GharPe Support <${SENDER_EMAIL}>`,
       to: [SUPPORT_EMAIL],
       subject: `Support Message from ${userName} — GharPe`,
@@ -169,8 +194,8 @@ export async function POST(req: NextRequest) {
       replyTo: userEmail,
     });
 
-    if (error) {
-      console.error("Resend error:", error);
+    if (emailError.error) {
+      console.error("Resend error:", emailError.error);
       return NextResponse.json(
         { error: "Failed to send message. Please try again later." },
         { status: 502 }
