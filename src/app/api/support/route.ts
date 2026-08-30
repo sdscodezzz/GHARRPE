@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
-import crypto from "crypto";
 
 // Force this route to be dynamic — never statically generated at build time
 export const dynamic = "force-dynamic";
-// Force Node.js runtime (Edge Runtime doesn't support Node.js crypto module)
-export const runtime = "nodejs";
 
 // ─── Resend client (lazy init — avoids build-time crash when env var is missing) ───
 function getResend() {
@@ -37,21 +34,33 @@ function checkRateLimit(email: string): boolean {
   return true;
 }
 
-// ─── HMAC verification ──────────────────────────────────────────────────────
-function verifySignature(
+// ─── HMAC verification (Web Crypto API — works in Edge + Node.js) ──────────
+async function verifySignature(
   payload: string,
   signature: string,
   secret: string
-): boolean {
+): Promise<boolean> {
   try {
-    const expected = crypto
-      .createHmac("sha256", secret)
-      .update(payload)
-      .digest("hex");
-    return crypto.timingSafeEqual(
-      Buffer.from(expected, "hex"),
-      Buffer.from(signature, "hex")
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      enc.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
     );
+    const sig = await crypto.subtle.sign("HMAC", key, enc.encode(payload));
+    const expected = Array.from(new Uint8Array(sig))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    // Constant-time comparison to prevent timing attacks
+    if (expected.length !== signature.length) return false;
+    let result = 0;
+    for (let i = 0; i < expected.length; i++) {
+      result |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+    }
+    return result === 0;
   } catch {
     return false;
   }
@@ -102,7 +111,7 @@ export async function POST(req: NextRequest) {
       );
     }
     const payload = `${userName}:${userEmail}:${message.trim()}:${timestamp}`;
-    if (!verifySignature(payload, signature, hmacSecret)) {
+    if (!(await verifySignature(payload, signature, hmacSecret))) {
       return NextResponse.json(
         { error: "Invalid request signature." },
         { status: 401 }
