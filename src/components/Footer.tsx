@@ -62,7 +62,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-sm text-ink-secondary">
                 <Mail size={16} className="mt-0.5 text-brand-400 shrink-0" />
-                <div><div className="font-medium text-ink">support@gharpe.coop</div><div className="text-xs text-ink-muted">{t("footer.response")}</div></div>
+                <div><div className="font-medium text-ink">gharpe.help@gmail.com</div><div className="text-xs text-ink-muted">{t("footer.response")}</div></div>
               </li>
               <li className="flex items-start gap-3 text-sm text-ink-secondary">
                 <MapPin size={16} className="mt-0.5 text-brand-400 shrink-0" />

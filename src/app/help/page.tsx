@@ -71,7 +71,7 @@ function FAQSection() {
 
 function ContactOptions({ onOpenComplaint, onOpenChat }: { onOpenComplaint: () => void; onOpenChat: () => void }) {
   const options = [
-    { icon: Mail, title: "Email Support", desc: "Response within 24 hours", detail: "support@gharpe.coop", color: "text-accent-green", action: undefined },
+    { icon: Mail, title: "Email Support", desc: "Response within 24 hours", detail: "gharpe.help@gmail.com", color: "text-accent-green", action: undefined },
     { icon: MessageSquare, title: "Live Chat", desc: "Chat with our support team", detail: "Start Chat", color: "text-brand-400", action: onOpenChat },
     { icon: AlertCircle, title: "Raise a Complaint", desc: "Report issues with bookings", detail: "File Complaint", color: "text-accent-orange", action: onOpenComplaint },
   ];
