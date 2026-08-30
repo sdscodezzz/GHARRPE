@@ -4,6 +4,8 @@ import crypto from "crypto";
 
 // Force this route to be dynamic — never statically generated at build time
 export const dynamic = "force-dynamic";
+// Force Node.js runtime (Edge Runtime doesn't support Node.js crypto module)
+export const runtime = "nodejs";
 
 // ─── Resend client (lazy init — avoids build-time crash when env var is missing) ───
 function getResend() {
