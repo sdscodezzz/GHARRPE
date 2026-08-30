@@ -1,18 +1,16 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect, useCallback, Suspense } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Mail, MessageSquare, AlertCircle, Search,
-  ChevronDown, CheckCircle, Shield, Heart,
-  X, Send, LogIn, Loader2,
+  ChevronDown, CheckCircle, Shield, Heart, X,
 } from "lucide-react";
 import Button from "@/components/Button";
-import Badge from "@/components/Badge";
-import { useAuth } from "@/contexts/AuthContext";
 import { AccordionItem } from "@/components/Accordion";
 import FormInput, { FormSelect, FormTextarea } from "@/components/FormInput";
 import { faqs } from "@/data/workers";
+import { SUPPORT_FLOWS, MAIN_MENU, type FlowOption } from "@/data/supportFlows";
 import { Reveal, StaggerReveal } from "@/hooks/useScrollReveal";
 
 
@@ -118,189 +116,164 @@ function ComplaintForm({ onClose }: { onClose: () => void }) {
   );
 }
 
-const MAX_MSG_LEN = 2000;
+type ChatMsg = { from: "bot" | "user"; text: string; options?: { label: string; action: () => void }[] };
 
-/** Simple HMAC-SHA256 signing via Web Crypto (browser-compatible) */
-async function signPayload(payload: string, secret: string): Promise<string> {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(payload));
-  return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-type Msg = { from: "bot" | "user" | "system"; text: string };
+const WELCOME_MSG: ChatMsg = {
+  from: "bot",
+  text: "Hi! 👋 Welcome to GharPe Support.\n\nI'm here to help you find services, manage bookings, understand payments, resolve account issues and more.\n\nWhat can I help you with?",
+};
 
 function ChatWidget({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { user } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [history, setHistory] = useState<string[]>([]); // stack of flow IDs for back navigation
+  const [typing, setTyping] = useState(false);
 
-  const [messages, setMessages] = useState<Msg[]>([]);
-  const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState("");
-  const [lastSentAt, setLastSentAt] = useState(0);
-  const [hasSentFirstMessage, setHasSentFirstMessage] = useState(false);
-
-  // Initialize welcome message when opened
+  // Reset on open
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      setMessages([
-        { from: "bot", text: "Hello! How can we help you today? 👋" },
-      ]);
+      setMessages([{ ...WELCOME_MSG, options: buildMainMenu() }]);
     }
-  }, [isOpen, messages.length]);
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = useCallback(async () => {
-    const text = input.trim();
-    if (!text || sending) return;
-    setError("");
+  // ── Flow navigation ──
+  const goToFlow = useCallback((flowId: string) => {
+    const flow = SUPPORT_FLOWS[flowId];
+    if (!flow) return;
+    setHistory((h) => [...h, flowId]);
+    const step = flow.steps[0];
+    setTyping(true);
+    setTimeout(() => {
+      setMessages((prev) => [...prev, { from: "bot", text: step.message, options: buildFlowOptions(step.options) }]);
+      setTyping(false);
+    }, 400);
+  }, []);
 
-    // Auth check
-    if (!user) {
-      setError("Please sign in to contact support.");
-      return;
-    }
-
-    // Validate
-    if (text.length > MAX_MSG_LEN) {
-      setError(`Message must be under ${MAX_MSG_LEN} characters.`);
-      return;
-    }
-
-    // Anti-spam: 3 second cooldown between sends
-    const now = Date.now();
-    if (now - lastSentAt < 3000) {
-      setError("Please wait a few seconds before sending another message.");
-      return;
-    }
-
-    // Add user message to chat
-    setMessages((prev) => [...prev, { from: "user", text }]);
-    setInput("");
-    setSending(true);
-    setLastSentAt(now);
-
-    try {
-      const timestamp = String(Date.now());
-      const secret = "gharpe-support-hmac-secret-2026"; // Must match SUPPORT_HMAC_SECRET in .env.local
-      const payload = `${user.name}:${user.email}:${text}:${timestamp}`;
-      const signature = await signPayload(payload, secret);
-
-      const res = await fetch("/api/support", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          userName: user.name,
-          userEmail: user.email,
-          timestamp,
-          signature,
-          pageUrl: pathname,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to send message.");
-      }
-
-      // Show auto-response with support info after first message only
-      if (!hasSentFirstMessage) {
-        setHasSentFirstMessage(true);
-        setMessages((prev) => [
-          ...prev,
-          { from: "bot", text: "Hello! Thanks for contacting GharPe Support. 👋\n\nFor immediate assistance, please call us at 8017273136 or email us at gharpe.help@gmail.com.\n\nWe will get back to you immediately." },
-        ]);
+  const goBack = useCallback(() => {
+    setHistory((h) => {
+      const newH = [...h];
+      newH.pop(); // remove current
+      const prevId = newH[newH.length - 1];
+      if (prevId) {
+        const flow = SUPPORT_FLOWS[prevId];
+        if (flow) {
+          const step = flow.steps[0];
+          setTyping(true);
+          setTimeout(() => {
+            setMessages((prev) => [...prev, { from: "bot", text: step.message, options: buildFlowOptions(step.options) }]);
+            setTyping(false);
+          }, 400);
+        }
       } else {
-        setMessages((prev) => [
-          ...prev,
-          { from: "bot", text: "Message sent successfully! Our support team will get back to you soon." },
-        ]);
+        // Back to main menu
+        setTyping(true);
+        setTimeout(() => {
+          setMessages((prev) => [...prev, { ...WELCOME_MSG, options: buildMainMenu() }]);
+          setTyping(false);
+        }, 400);
       }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
-      setError(msg);
-      setMessages((prev) => [
-        ...prev,
-        { from: "system", text: `⚠️ ${msg}` },
-      ]);
-    } finally {
-      setSending(false);
+      return newH;
+    });
+  }, []);
+
+  const goMainMenu = useCallback(() => {
+    setHistory([]);
+    setTyping(true);
+    setTimeout(() => {
+      setMessages((prev) => [...prev, { ...WELCOME_MSG, options: buildMainMenu() }]);
+      setTyping(false);
+    }, 400);
+  }, []);
+
+  const handleNav = useCallback((path: string) => {
+    if (path.startsWith("mailto:") || path.startsWith("tel:")) {
+      window.location.href = path;
+    } else {
+      onClose();
+      router.push(path);
     }
-  }, [input, sending, user, lastSentAt, pathname]);
+  }, [onClose, router]);
+
+  // ── Build option buttons with actions ──
+  function buildFlowOptions(opts: FlowOption[]): ChatMsg["options"] {
+    return opts.map((o) => ({
+      label: o.label,
+      action: () => {
+        if (o.action.type === "navigate") handleNav(o.action.path);
+        else if (o.action.type === "flow") goToFlow(o.action.id);
+        else if (o.action.type === "mainMenu") goMainMenu();
+        else if (o.action.type === "back") goBack();
+      },
+    }));
+  }
+
+  function buildMainMenu(): ChatMsg["options"] {
+    return MAIN_MENU.map((o) => ({
+      label: o.label,
+      action: () => {
+        if (o.action.type === "flow") goToFlow(o.action.id);
+      },
+    }));
+  }
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 left-4 sm:left-auto z-50 w-auto sm:w-80 bg-surface-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[70vh]">
+    <div className="fixed bottom-4 right-4 left-4 sm:left-auto z-50 w-auto sm:w-96 bg-surface-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
       {/* Header */}
-      <div className="gradient-brand text-white p-3 sm:p-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2"><MessageSquare size={18} /><span className="font-semibold text-sm">GharPe Support</span></div>
-        <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg cursor-pointer" aria-label="Close chat"><X size={16} /></button>
+      <div className="gradient-brand text-white p-3 sm:p-4 shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2"><MessageSquare size={18} /><span className="font-semibold text-sm">GharPe Support</span></div>
+          <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg cursor-pointer" aria-label="Close chat"><X size={16} /></button>
+        </div>
+        <div className="flex items-center gap-2 mt-1">
+          <span className="text-[10px] text-white/70">How can we help you today?</span>
+          <span className="text-[10px] text-green-300 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" /> Online</span>
+        </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 min-h-0 h-56 sm:h-64 overflow-y-auto p-3 space-y-2 bg-surface-alt">
+      <div className="flex-1 min-h-0 h-72 sm:h-80 overflow-y-auto p-3 space-y-3 bg-surface-alt">
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
-              msg.from === "user"
-                ? "gradient-brand text-white rounded-br-none"
-                : msg.from === "system"
-                  ? "bg-accent-pink/10 border border-accent-pink/20 text-accent-pink rounded-bl-none text-xs"
-                  : "bg-surface-card border border-border text-ink rounded-bl-none"
-            }`}>{msg.text}</div>
+          <div key={i} className="flex justify-start">
+            <div className="max-w-[90%] space-y-2">
+              <div className="bg-surface-card border border-border text-ink text-sm rounded-2xl rounded-bl-md px-4 py-3 whitespace-pre-line leading-relaxed">{msg.text}</div>
+              {msg.options && (
+                <div className="flex flex-wrap gap-1.5">
+                  {msg.options.map((opt, j) => (
+                    <button
+                      key={j}
+                      onClick={opt.action}
+                      className="px-3 py-1.5 text-xs font-medium rounded-full border border-brand-400/30 text-brand-400 hover:bg-brand-400/10 hover:border-brand-400/50 transition-all cursor-pointer whitespace-nowrap"
+                    >{opt.label}</button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ))}
-        {sending && (
+        {typing && (
           <div className="flex justify-start">
-            <div className="bg-surface-card border border-border rounded-xl rounded-bl-none px-3 py-2 flex items-center gap-2 text-sm text-ink-muted">
-              <Loader2 size={14} className="animate-spin" /> Sending...
+            <div className="bg-surface-card border border-border rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-ink-muted rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-2 h-2 bg-ink-muted rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-2 h-2 bg-ink-muted rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area */}
-      <div className="p-3 border-t border-border shrink-0">
-        {!user ? (
-          <div className="text-center">
-            <p className="text-xs text-ink-muted mb-2">Sign in to contact support</p>
-            <button
-              onClick={() => { onClose(); router.push("/login"); }}
-              className="w-full gradient-brand text-white text-sm font-medium py-2 rounded-xl flex items-center justify-center gap-2 hover:shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all cursor-pointer"
-            ><LogIn size={14} /> Sign In</button>
-          </div>
-        ) : (
-          <div className="flex gap-2">
-            <input
-              value={input}
-              onChange={(e) => { setInput(e.target.value); setError(""); }}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-              placeholder="Type your message..."
-              disabled={sending}
-              maxLength={MAX_MSG_LEN}
-              className="flex-1 px-3 py-2 text-sm border border-border rounded-xl bg-surface-muted text-ink placeholder-ink-muted focus:outline-none focus:border-brand-400 disabled:opacity-50"
-            />
-            <button
-              onClick={sendMessage}
-              disabled={sending || !input.trim()}
-              className="gradient-brand p-2 text-white rounded-xl hover:shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center"
-              aria-label="Send"
-            >{sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}</button>
-          </div>
-        )}
-        {error && user && <p className="text-xs text-accent-pink mt-1.5 px-1">{error}</p>}
-        {user && <p className="text-[10px] text-ink-muted mt-1 px-1">{input.length}/{MAX_MSG_LEN}</p>}
+      {/* Footer */}
+      <div className="px-3 py-2 border-t border-border shrink-0 flex items-center justify-between">
+        <button onClick={goMainMenu} className="text-[11px] text-brand-400 hover:text-brand-300 cursor-pointer flex items-center gap-1">🏠 Main Menu</button>
+        <span className="text-[10px] text-ink-muted">Powered by GharPe</span>
       </div>
     </div>
   );
