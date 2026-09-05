@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { User, Briefcase, MapPin, Upload, CheckCircle, X, Camera, FileText, Clock } from "lucide-react";
 import Button from "@/components/Button";
 import FormInput, { FormSelect } from "@/components/FormInput";
 import { serviceCategories } from "@/data/workers";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Tab = "customer" | "worker";
 
@@ -460,10 +461,18 @@ function SuccessState({ tab }: { tab: Tab }) {
 // ── Main Page ──
 function RegisterPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("customer");
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => { const tab = searchParams.get("tab"); if (tab === "worker" || tab === "customer") setActiveTab(tab); }, [searchParams]);
+
+  useEffect(() => {
+    if (user) router.replace("/profile");
+  }, [user, router]);
+
+  if (user) return null;
 
   return (
     <>
