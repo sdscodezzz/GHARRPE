@@ -22,7 +22,7 @@ export const LANGUAGES: { code: LangCode; label: string; nativeLabel: string }[]
 
 const translations: Record<LangCode, Record<string, string>> = {
   en: {
-    "nav.home": "Home", "nav.about": "About Us", "nav.services": "Services", "nav.register": "Register", "nav.help": "Help & Support",
+    "nav.home": "Home", "nav.about": "About Us", "nav.services": "Services", "nav.register": "Register", "nav.profile": "My Profile", "nav.help": "Help & Support",
     "nav.login": "Login", "nav.book": "Book a Service", "nav.settings": "Settings", "nav.darkMode": "Dark Mode", "nav.language": "Language",
     "hero.badge": "The Future of Cooperative Services",
     "hero.title1": "Verified Workers.", "hero.title2": "Fair Wages. Quality Service.",
@@ -145,7 +145,7 @@ const translations: Record<LangCode, Record<string, string>> = {
   },
 
   hi: {
-    "nav.home": "होम", "nav.about": "हमारे बारे में", "nav.services": "सेवाएँ", "nav.register": "रजिस्टर", "nav.help": "सहायता",
+    "nav.home": "होम", "nav.about": "हमारे बारे में", "nav.services": "सेवाएँ", "nav.register": "रजिस्टर", "nav.profile": "मेरी प्रोफ़ाइल", "nav.help": "सहायता",
     "nav.login": "लॉगिन", "nav.book": "सेवा बुक करें", "nav.settings": "सेटिंग्स", "nav.darkMode": "डार्क मोड", "nav.language": "भाषा",
     "hero.badge": "सहकारी सेवाओं का भविष्य",
     "hero.title1": "सत्यापित कामगार।", "hero.title2": "उचित वेतन। गुणवत्तापूर्ण सेवा।",
@@ -268,7 +268,7 @@ const translations: Record<LangCode, Record<string, string>> = {
   },
 
   bn: {
-    "nav.home": "হোম", "nav.about": "আমাদের সম্পর্কে", "nav.services": "সেবাসমূহ", "nav.register": "নিবন্ধন", "nav.help": "সহায়তা",
+    "nav.home": "হোম", "nav.about": "আমাদের সম্পর্কে", "nav.services": "সেবাসমূহ", "nav.register": "নিবন্ধন", "nav.profile": "আমার প্রোফাইল", "nav.help": "সহায়তা",
     "nav.login": "লগইন", "nav.book": "সেবা বুক করুন", "nav.settings": "সেটিংস", "nav.darkMode": "ডার্ক মোড", "nav.language": "ভাষা",
     "hero.badge": "সমবায় সেবার ভবিষ্যৎ",
     "hero.title1": "যাচাইকৃত শ্রমিক।", "hero.title2": "ন্যায্য বেতন। মানসম্মত সেবা।",
@@ -379,7 +379,7 @@ const translations: Record<LangCode, Record<string, string>> = {
   },
 
   mr: {
-    "nav.home": "मुख्यपृष्ठ", "nav.about": "आमच्याबद्दल", "nav.services": "सेवा", "nav.register": "नोंदणी", "nav.help": "मदत",
+    "nav.home": "मुख्यपृष्ठ", "nav.about": "आमच्याबद्दल", "nav.services": "सेवा", "nav.register": "नोंदणी", "nav.profile": "माझे प्रोफाइल", "nav.help": "मदत",
     "nav.login": "लॉगिन", "nav.book": "सेवा बुक करा", "nav.settings": "सेटिंग्ज", "nav.darkMode": "डार्क मोड", "nav.language": "भाषा",
     "hero.badge": "सहकारी सेवांचे भविष्य",
     "hero.title1": "प्रमाणित कामगार.", "hero.title2": "योग्य वेतन. दर्जेदार सेवा.",
@@ -490,7 +490,7 @@ const translations: Record<LangCode, Record<string, string>> = {
   },
 
   te: {
-    "nav.home": "హోమ్", "nav.about": "మా గురించి", "nav.services": "సేవలు", "nav.register": "నమోదు", "nav.help": "సహాయం",
+    "nav.home": "హోమ్", "nav.about": "మా గురించి", "nav.services": "సేవలు", "nav.register": "నమోదు", "nav.profile": "నా ప్రొఫైల్", "nav.help": "సహాయం",
     "nav.login": "లాగిన్", "nav.book": "సేవ బుక్ చేయండి", "nav.settings": "సెట్టింగ్‌లు", "nav.darkMode": "డార్క్ మోడ్", "nav.language": "భాష",
     "hero.badge": "సహకార సేవల భవిష్యత్తు",
     "hero.title1": "ధృవీకరించబడిన కార్మికులు.", "hero.title2": "న్యాయమైన వేతనాలు. నాణ్యమైన సేవ.",
