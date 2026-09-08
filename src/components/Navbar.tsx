@@ -25,9 +25,8 @@ export default function Navbar() {
     { href: "/", label: t("nav.home") },
     { href: "/about", label: t("nav.about") },
     { href: "/services", label: t("nav.services"), authRequired: true },
-    ...(!user ? [{ href: "/register", label: t("nav.register") }] : []),
+    { href: "/register", label: t("nav.register") },
     { href: "/help", label: t("nav.help") },
-    ...(user ? [{ href: "/profile", label: t("nav.profile") }] : []),
   ];
 
   const currentLang = LANGUAGES.find((l) => l.code === lang);
@@ -56,7 +55,7 @@ export default function Navbar() {
   const handleLogout = () => {
     logout();
     setMobileOpen(false);
-    if (pathname === "/services" || pathname === "/profile") {
+    if (pathname === "/services") {
       router.push("/login");
     }
   };
@@ -139,20 +138,17 @@ export default function Navbar() {
                   </div>
                   {/* User info when logged in */}
                   {user && (
-                    <Link
-                      href="/profile"
-                      className="block px-4 py-3 border-b border-border hover:bg-white/[0.03] transition-colors"
-                    >
+                    <div className="px-4 py-3 border-b border-border">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-brand-500/15 flex items-center justify-center">
                           <User size={14} className="text-brand-400" />
                         </div>
                         <div className="min-w-0">
                           <div className="text-sm font-medium text-ink truncate">{user.name}</div>
-                          <div className="text-xs text-ink-muted truncate">{t("nav.profile")}</div>
+                          <div className="text-xs text-ink-muted truncate">{user.email}</div>
                         </div>
                       </div>
-                    </Link>
+                    </div>
                   )}
                 </div>
               )}
