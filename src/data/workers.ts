@@ -23,6 +23,12 @@ export const cooperatives = [
 ];
 
 // ── Worker Types ──
+export interface WorkerAvailability {
+  workingDays: number[]; // 0=Sun 1=Mon ... 6=Sat
+  slots: string[]; // e.g. ["09:00", "10:30", "12:00", "14:00", "16:00", "18:00"]
+  bookedSlots: Record<string, string[]>; // e.g. { "2026-09-16": ["10:30", "16:00"] }
+}
+
 export interface Worker {
   id: string;
   name: string;
@@ -41,6 +47,7 @@ export interface Worker {
   certifications: string[];
   avatarInitials: string;
   phone: string;
+  availability: WorkerAvailability;
 }
 
 export const workers: Worker[] = [
@@ -61,6 +68,7 @@ export const workers: Worker[] = [
     bio: "Licensed electrician with 12 years of experience in residential and commercial wiring. Specialized in modern smart home installations and energy-efficient lighting solutions. Member of the Mumbai Labour Cooperative Federation since 2015.",
     certifications: ["Licensed Electrician - Govt of Maharashtra", "Smart Home Certified", "First Aid Certified"],
     avatarInitials: "RK", phone: "+919876543001",
+    availability: { workingDays: [1,2,3,4,5,6], slots: ["09:00","10:30","12:00","14:00","16:00","18:00"], bookedSlots: { "2026-09-16":["10:30"] } },
   },
   {
     id: "w2",
@@ -79,6 +87,7 @@ export const workers: Worker[] = [
     bio: "Experienced plumber specializing in residential plumbing solutions. Known for clean, efficient work and transparent pricing. Active member of the Delhi Workers Cooperative Society.",
     certifications: ["Plumbing Trade Certificate", "IPHC Certified"],
     avatarInitials: "SD", phone: "+919876543002",
+    availability: { workingDays: [1,2,3,4,5], slots: ["09:00","10:30","12:00","14:00","16:00"], bookedSlots: {} },
   },
   {
     id: "w3",
@@ -97,6 +106,7 @@ export const workers: Worker[] = [
     bio: "Master carpenter with expertise in traditional and modern woodwork. From custom furniture to complete kitchen renovations, delivering quality craftsmanship backed by cooperative standards.",
     certifications: ["Advanced Carpentry - NCVT", "Furniture Design Diploma"],
     avatarInitials: "AM", phone: "+919876543003",
+    availability: { workingDays: [1,2,3,4,5,6], slots: ["09:00","10:30","12:00","14:00","16:00","18:00"], bookedSlots: { "2026-09-15":["09:00","14:00"] } },
   },
   {
     id: "w4",
@@ -115,6 +125,7 @@ export const workers: Worker[] = [
     bio: "Professional painter with a keen eye for detail. Specializes in interior design-oriented painting, texture finishes, and weatherproof coatings. Consistent 5-star ratings for punctuality.",
     certifications: ["Painting & Decoration - ITI", "Asian Paints Certified Applicator"],
     avatarInitials: "PN", phone: "+919876543004",
+    availability: { workingDays: [1,2,3,4,5,6], slots: ["09:00","10:30","12:00","14:00","16:00","18:00"], bookedSlots: {} },
   },
   {
     id: "w5",
@@ -133,6 +144,7 @@ export const workers: Worker[] = [
     bio: "Reliable and trustworthy domestic help with experience managing households of all sizes. Trained in hygiene protocols and skilled in multi-cuisine cooking. Cooperative verified with full insurance coverage.",
     certifications: ["Domestic Worker Training - Skill India", "Food Safety Certificate"],
     avatarInitials: "MK", phone: "+919876543005",
+    availability: { workingDays: [1,2,3,4,5,6], slots: ["09:00","10:30","12:00","14:00","16:00","18:00"], bookedSlots: { "2026-09-17":["10:30","16:00"] } },
   },
   {
     id: "w6",
@@ -151,6 +163,7 @@ export const workers: Worker[] = [
     bio: "Compassionate caregiver with formal training in elderly and patient care. Previously worked with Apollo Homecare. Now serving through the cooperative model ensuring fair wages and quality care standards.",
     certifications: ["Certified Nursing Assistant", "Geriatric Care Specialist", "CPR & First Aid"],
     avatarInitials: "AR", phone: "+919876543006",
+    availability: { workingDays: [0,1,2,3,4,5,6], slots: ["09:00","10:30","12:00","14:00","16:00","18:00"], bookedSlots: {} },
   },
   {
     id: "w7",
@@ -169,6 +182,7 @@ export const workers: Worker[] = [
     bio: "Professional driver with clean driving record and extensive knowledge of city routes. Available for daily commute, airport transfers, and outstation trips. Vehicle provided on request.",
     certifications: ["Commercial Driving License", "Defensive Driving Certificate"],
     avatarInitials: "VP", phone: "+919876543007",
+    availability: { workingDays: [1,2,3,4,5,6], slots: ["09:00","10:30","12:00","14:00","16:00","18:00"], bookedSlots: { "2026-09-15":["12:00"] } },
   },
   {
     id: "w8",
@@ -187,6 +201,7 @@ export const workers: Worker[] = [
     bio: "Passionate about creating and maintaining beautiful green spaces. Expert in tropical plants, vertical gardens, and water-efficient landscaping. Let me transform your garden into a green oasis.",
     certifications: ["Horticulture Diploma - Govt of Karnataka", "Organic Farming Certified"],
     avatarInitials: "LI", phone: "+919876543008",
+    availability: { workingDays: [1,2,3,4,5,6], slots: ["09:00","10:30","12:00","14:00","16:00"], bookedSlots: {} },
   },
   {
     id: "w9",
@@ -205,6 +220,7 @@ export const workers: Worker[] = [
     bio: "Professional cleaning service with industrial-grade equipment and eco-friendly products. From regular maintenance to post-renovation deep cleans, ensuring spotless results every time.",
     certifications: ["Professional Cleaning Certification", "HACCP Food Safety", "COVID Safety Protocol"],
     avatarInitials: "MF", phone: "+919876543009",
+    availability: { workingDays: [0,1,2,3,4,5,6], slots: ["09:00","10:30","12:00","14:00","16:00","18:00"], bookedSlots: { "2026-09-16":["14:00","16:00"] } },
   },
   {
     id: "w10",
@@ -223,6 +239,7 @@ export const workers: Worker[] = [
     bio: "Multi-appliance repair specialist with authorized service experience from leading brands. Expert diagnosis, genuine spare parts, and warranty on all repairs. One call fixes all your appliance issues.",
     certifications: ["Electronics Mechanic - NCVT", "Carrier AC Certified", "LG Authorized Service"],
     avatarInitials: "DV", phone: "+919876543010",
+    availability: { workingDays: [1,2,3,4,5,6], slots: ["09:00","10:30","12:00","14:00","16:00","18:00"], bookedSlots: {} },
   },
   {
     id: "w11",
@@ -241,6 +258,7 @@ export const workers: Worker[] = [
     bio: "Warm and dependable domestic helper. Excellent cook specializing in South Indian cuisine. Also available for babysitting and elderly companionship. Cooperative member in good standing.",
     certifications: ["Skill India Certified", "First Aid"],
     avatarInitials: "KR", phone: "+919876543011",
+    availability: { workingDays: [1,2,3,4,5], slots: ["09:00","10:30","12:00","14:00","16:00"], bookedSlots: { "2026-09-18":["09:00"] } },
   },
   {
     id: "w12",
@@ -259,6 +277,7 @@ export const workers: Worker[] = [
     bio: "Veteran electrician with industrial and residential expertise. Specialist in solar installations and smart security systems. 18 years of field experience with zero safety incidents.",
     certifications: ["Wireman Grade I - Govt of Telangana", "Solar Installation Certified", "CCTV Installer"],
     avatarInitials: "SB", phone: "+919876543012",
+    availability: { workingDays: [1,2,3,4,5,6], slots: ["09:00","10:30","12:00","14:00","16:00","18:00"], bookedSlots: {} },
   },
   {
     id: "w13",
@@ -277,6 +296,7 @@ export const workers: Worker[] = [
     bio: "Detail-oriented cleaning professional specializing in both residential and commercial spaces. Using eco-friendly products and modern techniques for a healthier, sparkling clean environment.",
     certifications: ["Professional Housekeeping - NSDC", "Green Cleaning Certified"],
     avatarInitials: "NG", phone: "+919876543013",
+    availability: { workingDays: [1,2,3,4,5,6], slots: ["09:00","10:30","12:00","14:00","16:00","18:00"], bookedSlots: { "2026-09-15":["10:30"] } },
   },
 ];
 
