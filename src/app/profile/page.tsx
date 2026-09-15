@@ -24,17 +24,17 @@ const MOCK_COMPLETED_ORDERS: OrderDisplay[] = [
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, logout, bookings, updateProfile } = useAuth();
+  const { user, isLoading, logout, bookings, updateProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<"overview" | "bookings" | "history" | "settings">("overview");
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: "", phone: "", address: "" });
 
-  // Redirect if not logged in
+  // Redirect if not logged in (only after loading is complete)
   useEffect(() => {
-    if (!user) {
+    if (!isLoading && !user) {
       router.push("/login");
     }
-  }, [user, router]);
+  }, [user, isLoading, router]);
 
   // Initialize edit form when user data loads
   useEffect(() => {
@@ -43,6 +43,7 @@ export default function ProfilePage() {
     }
   }, [user]);
 
+  if (isLoading) return null;
   if (!user) return null;
 
   const upcomingBookings = bookings.filter((b) => b.status === "upcoming");
