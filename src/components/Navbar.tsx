@@ -27,7 +27,7 @@ export default function Navbar() {
     { href: "/", label: t("nav.home") },
     { href: "/about", label: t("nav.about") },
     { href: "/services", label: t("nav.services"), authRequired: true },
-    { href: "/register", label: t("nav.register") },
+    { href: user ? "/profile" : "/register", label: user ? "My Profile" : t("nav.register") },
     { href: "/help", label: t("nav.help") },
   ];
 
@@ -206,7 +206,7 @@ export default function Navbar() {
               onClick={!user ? (e) => { e.preventDefault(); setRedirectTo("/services"); router.push("/login"); } : undefined}
               className="hidden md:inline-flex"
             >
-              <Button variant="primary" size="sm">{t("nav.book")}</Button>
+              <Button variant="primary" size="sm">{user ? t("nav.book") : "Sign Up"}</Button>
             </Link>
 
             <button onClick={() => setMobileOpen(!mobileOpen)}                className="md:hidden p-2 rounded-xl hover:bg-white/[0.05] text-ink-secondary cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"

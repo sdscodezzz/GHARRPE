@@ -6,6 +6,7 @@ import { User, Briefcase, MapPin, Upload, CheckCircle, X, Camera, FileText, Cloc
 import Button from "@/components/Button";
 import FormInput, { FormSelect } from "@/components/FormInput";
 import { serviceCategories } from "@/data/workers";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Tab = "customer" | "worker";
 
@@ -68,6 +69,7 @@ function ImageUpload({ label, accept, preview, onUpload, onRemove, error }: { la
 
 // ── Customer Form (with real geolocation) ──
 function CustomerForm({ onSuccess }: { onSuccess: () => void }) {
+  const { register } = useAuth();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", language: "English", password: "", confirmPassword: "", terms: false });
@@ -90,7 +92,7 @@ function CustomerForm({ onSuccess }: { onSuccess: () => void }) {
     return errs;
   }, [form]);
 
-  const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); const errs = validate(); setErrors(errs); if (Object.keys(errs).length > 0) return; setLoading(true); await new Promise((r) => setTimeout(r, 1500)); setLoading(false); onSuccess(); };
+  const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); const errs = validate(); setErrors(errs); if (Object.keys(errs).length > 0) return; setLoading(true); await register({ name: form.name, email: form.email, phone: form.phone, address: form.address, language: form.language, accountType: "customer" }); setLoading(false); onSuccess(); };
 
   // ── Real browser geolocation ──
   const handleGeolocation = () => {
@@ -210,6 +212,7 @@ function CustomerForm({ onSuccess }: { onSuccess: () => void }) {
 
 // ── Worker Form (complete rewrite) ──
 function WorkerForm({ onSuccess }: { onSuccess: () => void }) {
+  const { register } = useAuth();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [step, setStep] = useState<"form" | "review">("form");
@@ -274,7 +277,13 @@ function WorkerForm({ onSuccess }: { onSuccess: () => void }) {
 
   const handleSubmit = async () => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 2000));
+    await register({
+      name, email, phone, accountType: "worker",
+      profession, skills, experience,
+      city, state, district, pinCode, serviceRadius,
+      availableDays, startTime, endTime, availabilityType,
+      idType,
+    });
     setLoading(false);
     onSuccess();
   };
