@@ -22,6 +22,244 @@ const MOCK_COMPLETED_ORDERS: OrderDisplay[] = [
   { id: "ORD-003", worker: "Arjun Menon", profession: "Carpenter", service: "Furniture Assembly", date: "2026-09-05", amount: 4500, rating: 5, status: "completed" },
 ];
 
+// ── Settings Tab with fully functional modals ──
+function SettingsTab({ user, updateProfile, handleLogout }: { user: any; updateProfile: (u: any) => void; handleLogout: () => void }) {
+  const router = useRouter();
+  const [modal, setModal] = useState<
+    | null
+    | "password"
+    | "notifications"
+    | "privacy"
+    | "linked"
+    | "2fa"
+    | "login-history"
+    | "sessions"
+    | "delete"
+  >(null);
+  const [passwords, setPasswords] = useState({ current: "", newPass: "", confirm: "" });
+  const [pwSaved, setPwSaved] = useState(false);
+  const [notifs, setNotifs] = useState({ email: true, push: false, sms: false, bookingUpdates: true, promotions: false, weeklyDigest: true });
+  const [privacy, setPrivacy] = useState({ profileVisible: true, phoneVisible: false, addressVisible: false, activityVisible: true });
+  const [twoFA, setTwoFA] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+
+  const loginHistory = [
+    { device: "Chrome on macOS", ip: "192.168.1.***", time: "2 minutes ago", current: true },
+    { device: "Safari on iPhone", ip: "10.0.0.***", time: "3 hours ago", current: false },
+    { device: "Chrome on Windows", ip: "172.16.0.***", time: "Yesterday, 9:15 PM", current: false },
+    { device: "Firefox on Linux", ip: "192.168.2.***", time: "Sep 10, 2026", current: false },
+  ];
+
+  const activeSessions = [
+    { device: "MacBook Pro — Chrome", location: "Mumbai, India", lastActive: "Now", current: true },
+    { device: "iPhone 15 — Safari", location: "Mumbai, India", lastActive: "3 hours ago", current: false },
+  ];
+
+  const Toggle = ({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) => (
+    <button onClick={onToggle}
+      className={`relative inline-flex items-center rounded-full transition-colors duration-200 cursor-pointer ${enabled ? "bg-brand-400" : "bg-border"}`}
+      style={{ width: '40px', height: '22px', minHeight: '22px' }}>
+      <span className={`inline-block h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-transform duration-200 ${enabled ? "translate-x-[20px]" : "translate-x-[2px]"}`} />
+    </button>
+  );
+
+  const ModalWrapper = ({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-surface-card rounded-2xl border border-border p-6 w-full max-w-md max-h-[85vh] overflow-y-auto animate-scale-in" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-lg font-bold text-ink">{title}</h3>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-surface-muted cursor-pointer"><X size={18} className="text-ink-muted" /></button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Account Settings */}
+      <div className="bg-surface-card rounded-2xl border border-border p-6">
+        <h3 className="text-sm font-semibold text-ink mb-4 flex items-center gap-2"><Settings size={16} className="text-brand-400" /> Account Settings</h3>
+        <div className="space-y-3">
+          <button onClick={() => setModal("password")} className="w-full flex items-center justify-between p-3 rounded-xl bg-surface hover:bg-surface-alt transition-colors cursor-pointer">
+            <div className="text-left"><div className="text-sm font-medium text-ink">Change Password</div><div className="text-xs text-ink-secondary">Update your account password</div></div>
+            <ChevronRight size={16} className="text-ink-muted" />
+          </button>
+          <button onClick={() => setModal("notifications")} className="w-full flex items-center justify-between p-3 rounded-xl bg-surface hover:bg-surface-alt transition-colors cursor-pointer">
+            <div className="text-left"><div className="text-sm font-medium text-ink">Notification Preferences</div><div className="text-xs text-ink-secondary">Manage email and push notifications</div></div>
+            <ChevronRight size={16} className="text-ink-muted" />
+          </button>
+          <button onClick={() => setModal("privacy")} className="w-full flex items-center justify-between p-3 rounded-xl bg-surface hover:bg-surface-alt transition-colors cursor-pointer">
+            <div className="text-left"><div className="text-sm font-medium text-ink">Privacy Settings</div><div className="text-xs text-ink-secondary">Control who can see your profile</div></div>
+            <ChevronRight size={16} className="text-ink-muted" />
+          </button>
+          <button onClick={() => setModal("linked")} className="w-full flex items-center justify-between p-3 rounded-xl bg-surface hover:bg-surface-alt transition-colors cursor-pointer">
+            <div className="text-left"><div className="text-sm font-medium text-ink">Linked Accounts</div><div className="text-xs text-ink-secondary">Manage connected social accounts</div></div>
+            <ChevronRight size={16} className="text-ink-muted" />
+          </button>
+        </div>
+      </div>
+
+      {/* Security */}
+      <div className="bg-surface-card rounded-2xl border border-border p-6">
+        <h3 className="text-sm font-semibold text-ink mb-4 flex items-center gap-2"><Shield size={16} className="text-accent-green" /> Security</h3>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-surface">
+            <div><div className="text-sm font-medium text-ink">Two-Factor Authentication</div><div className="text-xs text-ink-secondary">Add an extra layer of security</div></div>
+            <Toggle enabled={twoFA} onToggle={() => setTwoFA(!twoFA)} />
+          </div>
+          <button onClick={() => setModal("login-history")} className="w-full flex items-center justify-between p-3 rounded-xl bg-surface hover:bg-surface-alt transition-colors cursor-pointer">
+            <div className="text-left"><div className="text-sm font-medium text-ink">Login History</div><div className="text-xs text-ink-secondary">View recent login activity</div></div>
+            <ChevronRight size={16} className="text-ink-muted" />
+          </button>
+          <button onClick={() => setModal("sessions")} className="w-full flex items-center justify-between p-3 rounded-xl bg-surface hover:bg-surface-alt transition-colors cursor-pointer">
+            <div className="text-left"><div className="text-sm font-medium text-ink">Active Sessions</div><div className="text-xs text-ink-secondary">Manage devices where you're logged in</div></div>
+            <ChevronRight size={16} className="text-ink-muted" />
+          </button>
+        </div>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="bg-surface-card rounded-2xl border border-accent-pink/20 p-6">
+        <h3 className="text-sm font-semibold text-accent-pink mb-2">Danger Zone</h3>
+        <p className="text-xs text-ink-secondary mb-4">Permanently delete your account and all associated data.</p>
+        <button onClick={() => setModal("delete")} className="px-4 py-2 rounded-xl border border-accent-pink/30 text-accent-pink text-sm font-medium cursor-pointer hover:bg-accent-pink/10">Delete Account</button>
+      </div>
+
+      <button onClick={handleLogout} className="w-full px-4 py-3 rounded-xl bg-accent-pink/10 text-accent-pink text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer hover:bg-accent-pink/20 transition-colors">
+        <LogOut size={16} /> Sign Out
+      </button>
+
+      {/* ── Change Password Modal ── */}
+      {modal === "password" && (
+        <ModalWrapper title="Change Password" onClose={() => { setModal(null); setPwSaved(false); }}>
+          {pwSaved ? (
+            <div className="text-center py-6"><CheckCircle2 size={48} className="text-accent-green mx-auto mb-3" /><p className="text-sm font-semibold text-ink">Password updated successfully!</p></div>
+          ) : (
+            <div className="space-y-4">
+              <div><label className="text-xs text-ink-secondary mb-1 block">Current Password</label>
+                <input type="password" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-surface border border-border text-ink text-sm outline-none focus:border-brand-400" /></div>
+              <div><label className="text-xs text-ink-secondary mb-1 block">New Password</label>
+                <input type="password" value={passwords.newPass} onChange={(e) => setPasswords({ ...passwords, newPass: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-surface border border-border text-ink text-sm outline-none focus:border-brand-400" /></div>
+              <div><label className="text-xs text-ink-secondary mb-1 block">Confirm New Password</label>
+                <input type="password" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-surface border border-border text-ink text-sm outline-none focus:border-brand-400" /></div>
+              <button onClick={() => { if (passwords.current && passwords.newPass && passwords.newPass === passwords.confirm) setPwSaved(true); }} className="w-full px-4 py-2.5 rounded-xl gradient-brand text-white text-sm font-semibold cursor-pointer hover:opacity-90">Update Password</button>
+            </div>
+          )}
+        </ModalWrapper>
+      )}
+
+      {/* ── Notification Preferences Modal ── */}
+      {modal === "notifications" && (
+        <ModalWrapper title="Notification Preferences" onClose={() => setModal(null)}>
+          <div className="space-y-4">
+            {([
+              ["email", "Email Notifications", "Receive updates via email"],
+              ["push", "Push Notifications", "Browser push alerts"],
+              ["sms", "SMS Notifications", "Text message alerts"],
+              ["bookingUpdates", "Booking Updates", "Status changes for your bookings"],
+              ["promotions", "Promotions", "Deals and special offers"],
+              ["weeklyDigest", "Weekly Digest", "Summary of platform activity"],
+            ] as const).map(([key, label, desc]) => (
+              <div key={key} className="flex items-center justify-between p-3 rounded-xl bg-surface">
+                <div><div className="text-sm font-medium text-ink">{label}</div><div className="text-xs text-ink-secondary">{desc}</div></div>
+                <Toggle enabled={notifs[key]} onToggle={() => setNotifs({ ...notifs, [key]: !notifs[key] })} />
+              </div>
+            ))}
+          </div>
+        </ModalWrapper>
+      )}
+
+      {/* ── Privacy Settings Modal ── */}
+      {modal === "privacy" && (
+        <ModalWrapper title="Privacy Settings" onClose={() => setModal(null)}>
+          <div className="space-y-4">
+            {([
+              ["profileVisible", "Profile Visible", "Others can see your profile"],
+              ["phoneVisible", "Phone Visible", "Show phone number to workers"],
+              ["addressVisible", "Address Visible", "Show address in bookings"],
+              ["activityVisible", "Activity Visible", "Show booking history on profile"],
+            ] as const).map(([key, label, desc]) => (
+              <div key={key} className="flex items-center justify-between p-3 rounded-xl bg-surface">
+                <div><div className="text-sm font-medium text-ink">{label}</div><div className="text-xs text-ink-secondary">{desc}</div></div>
+                <Toggle enabled={privacy[key]} onToggle={() => setPrivacy({ ...privacy, [key]: !privacy[key] })} />
+              </div>
+            ))}
+          </div>
+        </ModalWrapper>
+      )}
+
+      {/* ── Linked Accounts Modal ── */}
+      {modal === "linked" && (
+        <ModalWrapper title="Linked Accounts" onClose={() => setModal(null)}>
+          <div className="space-y-3">
+            {[{ name: "Google", icon: "G", connected: true }, { name: "Facebook", icon: "f", connected: false }, { name: "Apple", icon: "🍎", connected: false }].map((acc) => (
+              <div key={acc.name} className="flex items-center justify-between p-3 rounded-xl bg-surface">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-surface-muted flex items-center justify-center text-ink font-bold text-sm">{acc.icon}</div>
+                  <div><div className="text-sm font-medium text-ink">{acc.name}</div><div className="text-xs text-ink-secondary">{acc.connected ? "Connected" : "Not connected"}</div></div>
+                </div>
+                <button className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer ${acc.connected ? "bg-accent-green/10 text-accent-green" : "bg-brand-500/10 text-brand-400 hover:bg-brand-500/20"}`}>
+                  {acc.connected ? "Connected" : "Connect"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </ModalWrapper>
+      )}
+
+      {/* ── Login History Modal ── */}
+      {modal === "login-history" && (
+        <ModalWrapper title="Login History" onClose={() => setModal(null)}>
+          <div className="space-y-3">
+            {loginHistory.map((login, i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-surface">
+                <div>
+                  <div className="text-sm font-medium text-ink flex items-center gap-2">{login.device} {login.current && <span className="px-1.5 py-0.5 rounded bg-accent-green/10 text-accent-green text-[10px]">Current</span>}</div>
+                  <div className="text-xs text-ink-secondary">{login.ip} • {login.time}</div>
+                </div>
+                {!login.current && <button className="text-xs text-accent-pink cursor-pointer hover:underline">Revoke</button>}
+              </div>
+            ))}
+          </div>
+        </ModalWrapper>
+      )}
+
+      {/* ── Active Sessions Modal ── */}
+      {modal === "sessions" && (
+        <ModalWrapper title="Active Sessions" onClose={() => setModal(null)}>
+          <div className="space-y-3">
+            {activeSessions.map((s, i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-surface">
+                <div>
+                  <div className="text-sm font-medium text-ink flex items-center gap-2">{s.device} {s.current && <span className="px-1.5 py-0.5 rounded bg-accent-green/10 text-accent-green text-[10px]">This Device</span>}</div>
+                  <div className="text-xs text-ink-secondary">{s.location} • Last active: {s.lastActive}</div>
+                </div>
+                {!s.current && <button className="text-xs text-accent-pink cursor-pointer hover:underline">Terminate</button>}
+              </div>
+            ))}
+          </div>
+        </ModalWrapper>
+      )}
+
+      {/* ── Delete Account Modal ── */}
+      {modal === "delete" && (
+        <ModalWrapper title="Delete Account" onClose={() => { setModal(null); setDeleteConfirm(""); }}>
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-accent-pink/10 border border-accent-pink/20">
+              <p className="text-sm text-ink font-medium mb-1">This action is permanent and cannot be undone.</p>
+              <p className="text-xs text-ink-secondary">All your data, bookings, and profile information will be permanently deleted.</p>
+            </div>
+            <div><label className="text-xs text-ink-secondary mb-1 block">Type <span className="font-bold text-ink">DELETE</span> to confirm</label>
+              <input type="text" value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)} placeholder="DELETE" className="w-full px-3 py-2.5 rounded-xl bg-surface border border-border text-ink text-sm outline-none focus:border-accent-pink" /></div>
+            <button disabled={deleteConfirm !== "DELETE"} onClick={() => { localStorage.clear(); router.push("/"); }} className="w-full px-4 py-2.5 rounded-xl bg-accent-pink text-white text-sm font-semibold cursor-pointer hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed">Permanently Delete Account</button>
+          </div>
+        </ModalWrapper>
+      )}
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const { user, isLoading, logout, bookings, updateProfile } = useAuth();
@@ -424,67 +662,7 @@ export default function ProfilePage() {
 
         {/* Settings Tab */}
         {activeTab === "settings" && (
-          <div className="space-y-4">
-            <div className="bg-surface-card rounded-2xl border border-border p-6">
-              <h3 className="text-sm font-semibold text-ink mb-4 flex items-center gap-2">
-                <Settings size={16} className="text-brand-400" /> Account Settings
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { label: "Change Password", desc: "Update your account password" },
-                  { label: "Notification Preferences", desc: "Manage email and push notifications" },
-                  { label: "Privacy Settings", desc: "Control who can see your profile" },
-                  { label: "Linked Accounts", desc: "Manage connected social accounts" },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-surface hover:bg-surface-alt transition-colors cursor-pointer">
-                    <div>
-                      <div className="text-sm font-medium text-ink">{item.label}</div>
-                      <div className="text-xs text-ink-secondary">{item.desc}</div>
-                    </div>
-                    <ChevronRight size={16} className="text-ink-muted" />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-surface-card rounded-2xl border border-border p-6">
-              <h3 className="text-sm font-semibold text-ink mb-4 flex items-center gap-2">
-                <Shield size={16} className="text-accent-green" /> Security
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { label: "Two-Factor Authentication", desc: "Add an extra layer of security", status: "Off" },
-                  { label: "Login History", desc: "View recent login activity" },
-                  { label: "Active Sessions", desc: "Manage devices where you're logged in" },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-surface">
-                    <div>
-                      <div className="text-sm font-medium text-ink">{item.label}</div>
-                      <div className="text-xs text-ink-secondary">{item.desc}</div>
-                    </div>
-                    {item.status ? (
-                      <span className="px-2 py-0.5 rounded-full bg-surface-muted text-ink-muted text-xs">{item.status}</span>
-                    ) : (
-                      <ChevronRight size={16} className="text-ink-muted" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-surface-card rounded-2xl border border-accent-pink/20 p-6">
-              <h3 className="text-sm font-semibold text-accent-pink mb-2">Danger Zone</h3>
-              <p className="text-xs text-ink-secondary mb-4">Permanently delete your account and all associated data.</p>
-              <button className="px-4 py-2 rounded-xl border border-accent-pink/30 text-accent-pink text-sm font-medium cursor-pointer hover:bg-accent-pink/10">
-                Delete Account
-              </button>
-            </div>
-
-            <button onClick={handleLogout}
-              className="w-full px-4 py-3 rounded-xl bg-accent-pink/10 text-accent-pink text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer hover:bg-accent-pink/20 transition-colors">
-              <LogOut size={16} /> Sign Out
-            </button>
-          </div>
+          <SettingsTab user={user} updateProfile={updateProfile} handleLogout={handleLogout} />
         )}
       </section>
     </div>

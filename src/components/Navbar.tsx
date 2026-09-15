@@ -14,8 +14,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
-  const [featuresOpen, setFeaturesOpen] = useState(false);
-  const featuresRef = useRef<HTMLDivElement>(null);
+
   const pathname = usePathname();
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
@@ -33,7 +32,7 @@ export default function Navbar() {
 
   const currentLang = LANGUAGES.find((l) => l.code === lang);
 
-  useEffect(() => { setMobileOpen(false); setSettingsOpen(false); setFeaturesOpen(false); }, [pathname]);
+  useEffect(() => { setMobileOpen(false); setSettingsOpen(false); }, [pathname]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -41,23 +40,10 @@ export default function Navbar() {
         setSettingsOpen(false);
         setLangOpen(false);
       }
-      if (featuresRef.current && !featuresRef.current.contains(e.target as Node)) {
-        setFeaturesOpen(false);
-      }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  const featureLinks = [
-    { href: "/geo-location", label: "Geo-Location Matching", icon: "📍" },
-    { href: "/payments", label: "Digital Payments", icon: "💳" },
-    { href: "/welfare", label: "Worker Welfare", icon: "🛡️" },
-    { href: "/emergency", label: "Emergency Booking", icon: "🚨" },
-    { href: "/admin", label: "Admin Dashboard", icon: "📊" },
-    { href: "/ai-forecasting", label: "AI Forecasting", icon: "🤖" },
-    { href: "/ratings", label: "Ratings & Reviews", icon: "⭐" },
-  ];
 
   const handleServicesClick = (e: React.MouseEvent) => {
     if (!user) {
@@ -99,28 +85,7 @@ export default function Navbar() {
                 }`}
               >{link.label}</Link>
             ))}
-            <div ref={featuresRef} className="relative">
-              <button onClick={() => { setFeaturesOpen(!featuresOpen); setSettingsOpen(false); setLangOpen(false); }}
-                className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-1 cursor-pointer ${
-                  featureLinks.some(l => pathname === l.href)
-                    ? "bg-brand-500/15 text-brand-300 shadow-[0_0_12px_rgba(124,58,237,0.1)]"
-                    : "text-ink-secondary hover:text-ink hover:bg-white/[0.04]"
-                }`}>
-                Features <ChevronDown size={14} className={`transition-transform ${featuresOpen ? "rotate-180" : ""}`} />
-              </button>
-              {featuresOpen && (
-                <div className="absolute left-0 top-full mt-2 w-56 bg-surface-card border border-border rounded-2xl shadow-2xl py-2 z-50">
-                  {featureLinks.map((link) => (
-                    <Link key={link.href} href={link.href}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${
-                        pathname === link.href ? "bg-brand-500/15 text-brand-300" : "text-ink-secondary hover:bg-white/[0.04] hover:text-ink"
-                      }`}>
-                      <span>{link.icon}</span> {link.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+
           </div>
 
           <div className="flex items-center gap-2">
@@ -227,22 +192,7 @@ export default function Navbar() {
                   pathname === link.href ? "bg-brand-500/15 text-brand-300" : "text-ink-secondary hover:bg-white/[0.04]"
                 }`}>{link.label}</Link>
             ))}
-            <button onClick={() => setFeaturesOpen(!featuresOpen)}
-              className={`w-full text-left px-3 py-3 rounded-xl text-sm font-medium transition-colors min-h-[44px] flex items-center justify-between cursor-pointer ${
-                featureLinks.some(l => pathname === l.href) ? "bg-brand-500/15 text-brand-300" : "text-ink-secondary hover:bg-white/[0.04]"
-              }`}>
-              Features <ChevronDown size={14} className={`transition-transform ${featuresOpen ? "rotate-180" : ""}`} />
-            </button>
-            {featuresOpen && (
-              <div className="pl-4 space-y-1">
-                {featureLinks.map((link) => (
-                  <Link key={link.href} href={link.href}
-                    className={`block px-3 py-2.5 rounded-lg text-xs font-medium transition-colors ${
-                      pathname === link.href ? "bg-brand-500/15 text-brand-300" : "text-ink-muted hover:bg-white/[0.04]"
-                    }`}>{link.icon} {link.label}</Link>
-                ))}
-              </div>
-            )}
+
           </div>
           <div className="px-4 py-3 border-t border-border space-y-2">
             {user ? (
